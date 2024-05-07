@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<title>Flight Search</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="script.js"></script>
+<script src="js/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function(){
+        var settings = {
+            async: true,
+            crossDomain: true,
+            url: 'https://sky-scanner3.p.rapidapi.com/flights/airports',
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': '4fe8707b67mshabf86fa777cf101p1158d8jsn43e99e090cdd',
+                'X-RapidAPI-Host': 'sky-scanner3.p.rapidapi.com'
+            }
+        };
+        var airports;
+        $.ajax(settings).done(function (response) {
+            airports = response.data;
+            console.log(airports);
+        });
+
+        $("#search").click(function() {
+            var from = document.getElementById("origin").value;
+            var to = document.getElementById("depart").value;
+            var departDate = document.getElementById("departure-date").value;
+            var returnDate = document.getElementById("return-date").value;
+            console.log("from: " + from + " to: " + to);
+            console.log("depart date: " + departDate + " return date: " + returnDate);
+            from = from.toUpperCase();
+            to = to.toUpperCase();
+            console.log("from: " + from + " to: " + to);
+            var fromId;
+            var toId;
+            
+            for (var i = 0;  i < airports.length; i++)
+            {
+                if (from == airports[i].iata)
+                {
+                    fromId = airports[i].id;
+                }
+                else if (to == airports[i].iata)
+                {
+                    toId = airports[i].id;
+                }
+            }
+            console.log("fromId: " + fromId);
+            console.log("toId: " + toId);
+            var queryURL = "https://sky-scanner3.p.rapidapi.com/flights/search-roundtrip?fromEntityId=" +
+                            fromId + "%3D&toEntityId=" + toId + "0%3D&departDate=" + departDate +"&returnDate=" + returnDate;
+            settings = {
+                async: true,
+                crossDomain: true,
+                url: queryURL,
+                method: 'GET',
+                headers: {
+                    'X-RapidAPI-Key': '4fe8707b67mshabf86fa777cf101p1158d8jsn43e99e090cdd',
+                    'X-RapidAPI-Host': 'sky-scanner3.p.rapidapi.com'
+                }
+            };
+            var queryResult = new Array();
+            $.ajax(settings).done(function (response) {
+                queryResult = response.data.itineraries;
+                console.log(queryResult);
+                $("#results").empty();
+                for (var i = 0; i < queryResult.length; i++)
+                {
+                    $("#results").append("<ul>");
+                    $("#results").append("<li><b>Flight " + (i+1) + "</b></li>");
+                    $("#results").append("<li>Price: " + queryResult[i].price.formatted + "</li>");
+                    $("#results").append("<li>Depart Duration: " + queryResult[i].legs[0].durationInMinutes + " minutes</li>");
+                    $("#results").append("<li>Depart Carrier: " + queryResult[i].legs[0].carriers.marketing[0].name + "</li>");
+                    $("#results").append("<li>Depart Stops: " + queryResult[i].legs[0].stopCount + "</li>");
+                    $("#results").append("<li>Return Duration: " + queryResult[i].legs[1].durationInMinutes + " minutes</li>");
+                    $("#results").append("<li>Return Carrier: " + queryResult[i].legs[1].carriers.marketing[0].name + "</li>");
+                    $("#results").append("<li>Return Stops: " + queryResult[i].legs[1].stopCount + "</li>");
+                    $("#results").append("</ul>");
+                }
+            });
+            
+        });
+    });
+    
+    
+    
+
+</script>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="pb-3 h3 text-left">Flight Search &#128747;</div>
+        </div> 
+        <div class="row">
+            <label for="origin" class="d-inline-flex">From</label>
+            <input type="text" placeholder="City or Airport" id="origin">
+        </div>
+        <div class="row">
+            <label for="depart" class="d-inline-flex">To</label>
+            <input type="text" placeholder="City or Airport" id="depart">
+        </div>
+        <div class="row">
+            <label for="departure-date" class=" d-inline-flex">Depart</label>
+            <input type="date" id="departure-date">
+        </div>
+        <div class="row">
+            <label for="return-date" class=" d-inline-flex">Depart</label>
+            <input type="date" id="return-date">
+        </div>
+        <div class="row">
+            <input type="button" value="Search" id="search">
+        </div>
+        <div class="column" id="results">
+
+        </div>
+    </div>
+</body>
+</html>
